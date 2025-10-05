@@ -1,10 +1,12 @@
-const { program } = require('commander');
 const fs = require('fs');
+const { program } = require('commander');
 
 program
-  .option('-i, --input <path>', 'Path to input JSON file') 
-  .option('-o, --output <path>', 'Path to output file')
-  .option('-d, --display', 'Display result in console');
+  .requiredOption('-i, --input <path>', 'input JSON file')
+  .option('-o, --output <path>', 'output file')
+  .option('-d, --display', 'display result in console')
+  .option('-v, --variety', 'show flower variety')
+  .option('-l, --length <number>', 'show only records with petal.length greater than value', parseFloat);
 
 program.parse(process.argv);
 
@@ -15,31 +17,33 @@ if (!options.input) {
   process.exit(1);
 }
 
-if (!fs.existsSync(options.input)) {
-  console.error('Cannot find input file');
-  process.exit(1);
-}
-
 let data;
 try {
   const fileContent = fs.readFileSync(options.input, 'utf-8');
   data = JSON.parse(fileContent);
 } catch (err) {
-  console.error('Error reading or parsing input file:', err.message);
+  console.error('Cannot find input file or invalid JSON');
   process.exit(1);
 }
 
-const output = JSON.stringify(data, null, 2);
+if (options.length !== undefined) {
+  data = data.filter(item => item['petal.length'] > options.length);
+}
+
+const result = data.map(item => {
+  let line = `${item['petal.length']} ${item['petal.width']}`;
+  if (options.variety) line += ` ${item['variety']}`;
+  return line;
+}).join('\n');
 
 if (options.display) {
-  console.log(output);
+  console.log(result);
 }
 
 if (options.output) {
   try {
-    fs.writeFileSync(options.output, output, 'utf-8');
+    fs.writeFileSync(options.output, result, 'utf-8');
   } catch (err) {
-    console.error('Error writing to output file:', err.message);
-    process.exit(1);
+    console.error('Error writing output file:', err.message);
   }
 }
