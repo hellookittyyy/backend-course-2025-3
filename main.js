@@ -12,11 +12,6 @@ program.parse(process.argv);
 
 const options = program.opts();
 
-// if (!options.input) {
-//   console.error('Please, specify input file');
-//   process.exit(1);
-// }
-
 let data;
 try {
   const fileContent = fs.readFileSync(options.input, 'utf-8');
